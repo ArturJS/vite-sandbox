@@ -1,45 +1,67 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
+import { observer } from 'mobx-react-lite';
+import { Form, Field } from './form';
 import logo from './logo.svg';
 import './app.scss';
 
-function App() {
-  const [count, setCount] = useState(0);
+// construct simple DCA form with fields sync
+// + computed things
+
+const App = observer(() => {
+  const fields = useMemo(
+    () => ({
+      name: {
+        value: '',
+        validators: [
+          (value: string) => {
+            if (value.length < 3) {
+              return {
+                error: 'Please enter at least 3 symbols',
+                closestValidValue: null
+              };
+            }
+          }
+        ]
+      }
+
+      // todo: implement nested field groups
+      // postalOffice: {
+      //   address: {
+      //     value: '',
+      //     validators: [
+      //       (value: string) => {
+      //         if (value.length === 0) {
+      //           return {
+      //             error: 'Address must not be empty',
+      //             closestValidValue: null,
+      //           };
+      //         }
+      //       }
+      //     ],
+      //   }
+      // }
+    }),
+    []
+  );
 
   return (
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>Hello Vite + React!</p>
-        <p>
-          <button type="button" onClick={() => setCount((count) => count + 1)}>
-            count is: {count}
-          </button>
-        </p>
-        <p>
-          Edit <code>App.tsx</code> and save to test HMR updates.
-        </p>
-        <p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-          {' | '}
-          <a
-            className="App-link"
-            href="https://vitejs.dev/guide/features.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Vite Docs
-          </a>
-        </p>
+
+        {/* @ts-ignore */}
+        <Form
+          fields={fields}
+          onSubmit={(values) => {
+            console.log(values);
+          }}
+        >
+          <Field name="name" />
+        </Form>
       </header>
     </div>
   );
-}
+});
 
 export default App;
