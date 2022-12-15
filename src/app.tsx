@@ -16,8 +16,7 @@ const App = observer(() => {
           (value: string) => {
             if (value.length < 3) {
               return {
-                error: 'Please enter at least 3 symbols',
-                closestValidValue: null
+                error: 'Please enter at least 3 symbols'
               };
             }
           }

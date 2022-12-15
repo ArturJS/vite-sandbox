@@ -7,12 +7,12 @@ interface TValues<TValue = FieldPrimitiveValue>
   [key: string]: TValue | TValues<TValue>;
 }
 
-interface ValidationResult<T> {
+interface ValidationResult<T extends FieldPrimitiveValue> {
   error?: string;
   closestValidValue?: T;
 }
 
-type Validator<T> = (
+type Validator<T extends FieldPrimitiveValue> = (
   value: T,
   options?: {
     values?: TValues;
@@ -20,18 +20,20 @@ type Validator<T> = (
   }
 ) => ValidationResult<T> | undefined;
 
-export type FieldParam<T extends string | number | boolean> = {
+export type FieldParam<T extends FieldPrimitiveValue> = {
   value: T | Record<string, FieldParam<T>>;
   validators: Validator<T>[];
 };
 
-export type TField = {
-  value: FieldPrimitiveValue;
+export type TFieldBase<TValue extends FieldPrimitiveValue> = {
+  value: TValue;
   isDirty: boolean;
-  validators: Validator<FieldPrimitiveValue>[];
-  onChange(value: FieldPrimitiveValue): void;
-  onBlur(value: FieldPrimitiveValue): void;
+  validators: Validator<TValue>[];
+  onChange(value: TValue): void;
+  onBlur(value: TValue): void;
 };
+
+export type TField = TFieldBase<string> | TFieldBase<number> | TFieldBase<boolean>;
 
 const createValueParser = <T>(initialValue: T) => {
   const valueType = typeof initialValue;
@@ -67,7 +69,7 @@ interface Formatter<T> {
   (value: T): T;
 }
 
-interface FieldParams<T> {
+interface FieldParams<T extends FieldPrimitiveValue> {
   value: T;
   validators: Validator<T>[];
   formStore: FormStore;
@@ -75,7 +77,7 @@ interface FieldParams<T> {
   formatters?: Formatter<T>[];
 }
 
-class Field<T> {
+class Field<T extends FieldPrimitiveValue> {
   public value: T;
   public isDirty: boolean;
   public validators: Validator<T>[];
@@ -141,9 +143,19 @@ class Field<T> {
   }
 }
 
+type TFieldParamsBase<TValue extends FieldPrimitiveValue> = Record<
+  string,
+  Omit<TFieldBase<TValue>, 'isDirty' | 'onChange' | 'onBlur'>
+>;
+
+export type TFieldParams =
+  | TFieldParamsBase<string>
+  | TFieldParamsBase<number>
+  | TFieldParamsBase<boolean>;
+
 export class FormStore {
   constructor(
-    fields: Record<string, TField>,
+    fields: TFieldParams,
     options?: {
       externals?: Record<string, unknown>;
     }
@@ -157,7 +169,7 @@ export class FormStore {
 
   @observable public errors: Record<
     string,
-    ValidationResult<string | number | boolean> | null
+    ValidationResult<FieldPrimitiveValue> | null
   > = {};
 
   @observable public externals: Record<string, unknown> = {};
@@ -205,7 +217,7 @@ export class FormStore {
     }
   }
 
-  private initFields(fields: Record<string, TField>) {
+  private initFields(fields: TFieldParams) {
     for (let [name, { value, validators }] of Object.entries(fields)) {
       // if (value instanceof FormStore) continue;
       const parseValue = createValueParser(value);
@@ -246,6 +258,7 @@ export class FormStore {
     const values = this.getValues();
 
     for (let validator of validators) {
+      // @ts-ignore
       const validation = validator(value, {
         values,
         externals: this.externals

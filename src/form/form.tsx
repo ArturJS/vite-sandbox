@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, createContext, useMemo } from 'react';
 import { observer } from 'mobx-react-lite';
 
-import { FormStore, FieldParam, TField } from './form-store';
+import { FormStore, TFieldParams } from './form-store';
 
 // @ts-ignore
 export const FormContext = createContext<FormStore>({});
@@ -21,9 +21,11 @@ export const Field = observer(({ name }: any) => {
   useEffect(() => {}, []);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // @ts-ignore
     onChange(event.target.value);
   };
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    // @ts-ignore
     onBlur(event.target.value);
   };
 
@@ -52,7 +54,7 @@ export const Form = observer(
     children
   }: {
     onSubmit(values: Record<string, unknown>): void;
-    fields: Record<string, TField>;
+    fields: TFieldParams;
     children: React.ReactNode | React.ReactChildren;
   }) => {
     const formStore = useMemo(() => new FormStore(fields), []);
