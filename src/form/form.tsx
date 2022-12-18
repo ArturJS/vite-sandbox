@@ -9,14 +9,12 @@ export const FormContext = createContext<FormStore>({});
 export const Field = observer(({ name }: any) => {
   const formStore = useContext<FormStore>(FormContext);
   const field = formStore.getField(name);
-  const { errors } = formStore;
-  const { error } = errors[name] ?? {};
 
-  // if (field instanceof FormStore) {
-  //   throw new TypeError(`Field with ${name} is instance of FormStore and cannot be accepted`);
-  // }
+  if (field instanceof FormStore) {
+    throw new TypeError(`Field with ${name} is instance of FormStore and cannot be accepted`);
+  }
 
-  const { value, onChange, onBlur } = field;
+  const { value, onChange, onBlur, error } = field;
 
   useEffect(() => {}, []);
 

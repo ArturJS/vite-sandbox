@@ -78,13 +78,13 @@ interface FieldParams<T extends FieldPrimitiveValue> {
 }
 
 class Field<T extends FieldPrimitiveValue> {
-  public value: T;
-  public isDirty: boolean;
+  @observable public value: T;
+  @observable public isDirty: boolean;
+  @observable public error: string | null = null;
+  @observable public closestValidValue: T | null = null;
   public validators: Validator<T>[];
   public parsers: Parser<T>[];
   public formatters: Formatter<T>[];
-  public error: string | null = null;
-  public closestValidValue: T | null = null;
   private formStore: FormStore;
 
   constructor({
@@ -106,25 +106,24 @@ class Field<T extends FieldPrimitiveValue> {
     makeObservable(this);
   }
 
-  @action public setDirty(isDirty = true) {
+  @action.bound
+  public setDirty(isDirty = true) {
     this.isDirty = isDirty;
   }
 
-  @action onChange = this.parseAndValidate;
+  @action.bound
+  onChange(rawValue: T) {
+    this.parseAndValidate(rawValue);
+  }
 
-  @action.bound onBlur(rawValue: T) {
+  @action.bound
+  public onBlur(rawValue: T) {
     this.setDirty();
     this.parseAndValidate(rawValue);
   }
 
-  @action.bound parseAndValidate(rawValue: T) {
-    this.value = this.parsers.reduceRight((valueToParse, parser) => {
-      return parser(valueToParse);
-    }, rawValue);
-    this.validate();
-  }
-
-  @action validate(force: boolean = false) {
+  @action.bound
+  public validate(force: boolean = false) {
     const { value, validators, isDirty } = this;
 
     if (!isDirty && !force) return;
@@ -140,6 +139,14 @@ class Field<T extends FieldPrimitiveValue> {
       this.error = validation?.error ?? null;
       this.closestValidValue = validation?.closestValidValue ?? null;
     }
+  }
+
+  @action.bound
+  private parseAndValidate(rawValue: T) {
+    this.value = this.parsers.reduceRight((valueToParse, parser) => {
+      return parser(valueToParse);
+    }, rawValue);
+    this.validate();
   }
 }
 
@@ -167,11 +174,6 @@ export class FormStore {
 
   @observable public isSubmitted = false;
 
-  @observable public errors: Record<
-    string,
-    ValidationResult<FieldPrimitiveValue> | null
-  > = {};
-
   @observable public externals: Record<string, unknown> = {};
 
   @observable private _fields: Record<string, Field<string> | Field<number> | Field<boolean>> = {};
@@ -190,10 +192,10 @@ export class FormStore {
     const result: TValues = {};
 
     for (let name of fieldNames) {
-      const field = this._fields[name];
+      const field = this.getField(name);
 
       if (field instanceof FormStore) {
-        // result[name] = field.getValues();
+        result[name] = field.getValues();
       } else {
         result[name] = field.value;
       }
@@ -207,7 +209,6 @@ export class FormStore {
   }
 
   @computed public get isInvalid(): boolean {
-    // return Object.values(this.errors).some((validation) => validation?.error);
     return Object.values(this._fields).some(({ error }) => error);
   }
 
@@ -215,7 +216,6 @@ export class FormStore {
     const fieldNames = Object.keys(this._fields);
     for (let name of fieldNames) {
       this._fields[name].validate(force);
-      // this.validateField(name, force);
     }
   }
 
@@ -226,60 +226,6 @@ export class FormStore {
         validators,
         formStore: this,
       });
-    }
-  }
-
-  private legacy_initFields(fields: TFieldParams) {
-    for (let [name, { value, validators }] of Object.entries(fields)) {
-      // if (value instanceof FormStore) continue;
-      const parseValue = createValueParser(value);
-      const parseAndValidate = action((rawValue: FieldPrimitiveValue) => {
-        const field = this._fields[name];
-        if (field instanceof FormStore) return;
-        field.value = parseValue(rawValue);
-        this.validateField(name);
-      });
-      // this._fields[name] = {
-      //   value,
-      //   isDirty: false,
-      //   validators,
-      //   onChange: parseAndValidate,
-      //   onBlur: (rawValue: FieldPrimitiveValue) => {
-      //     this.setDirty(name);
-      //     parseAndValidate(rawValue);
-      //   }
-      // };
-    }
-  }
-
-  @action private setDirty(name: string, isDirty: boolean = true) {
-    const field = this._fields[name];
-    if (field instanceof FormStore) return;
-    field.isDirty = isDirty;
-  }
-
-  private validateField(name: string, force: boolean = false) {
-    const field = this._fields[name];
-
-    if (field instanceof FormStore) return;
-
-    const { value, validators, isDirty } = field;
-
-    if (!isDirty && !force) return;
-
-    const values = this.getValues();
-
-    for (let validator of validators) {
-      // @ts-ignore
-      const validation = validator(value, {
-        values,
-        externals: this.externals
-      });
-      if (validation?.error) {
-        this.errors[name] = validation;
-      } else {
-        this.errors[name] = null;
-      }
     }
   }
 }
