@@ -2,24 +2,24 @@ import { computed, makeObservable, observable, action } from 'mobx';
 import type { FieldValue, TValues, TFieldBase, Externals } from './types';
 import { FieldStore } from './FieldStore';
 
-type TFieldParam<TValue = FieldValue> = Omit<
+type TField<TValue = FieldValue> = Omit<
   TFieldBase<TValue>,
   'isDirty' | 'onChange' | 'onBlur'
 >;
 
-export type TFieldParams<TValue = FieldValue> = {
-  [key in string]: TFieldParam<TValue> | TFieldParams<TValue>;
+export type TFieldGroup<TValue = FieldValue> = {
+  [key in string]: TField<TValue> | TFieldGroup<TValue>;
 };
 
 function checkIsNestedField(
-  field: TFieldParam | TFieldParams
-): field is TFieldParams {
+  field: TField | TFieldGroup
+): field is TFieldGroup {
   return !('value' in field);
 }
 
 export class FormStore {
   constructor(
-    fields: TFieldParams,
+    fields: TFieldGroup,
     options?: {
       externals?: Externals;
     }
@@ -70,7 +70,7 @@ export class FormStore {
     }
   };
 
-  private initFields(fields: TFieldParams, parentName = ''): void {
+  private initFields(fields: TFieldGroup, parentName = ''): void {
     for (let [name, field] of Object.entries(fields)) {
       const fieldName = parentName ? `${parentName}.${name}` : name;
 

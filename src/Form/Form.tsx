@@ -1,6 +1,6 @@
 import React, { createContext, useMemo } from 'react';
 import { observer } from 'mobx-react-lite';
-import { FormStore, TFieldParams } from './store';
+import { FormStore, TFieldGroup } from './store';
 
 export const FormContext = createContext<FormStore | null>(null);
 
@@ -11,7 +11,7 @@ export const Form = observer(
     children
   }: {
     onSubmit(values: Record<string, unknown>): void;
-    fields: TFieldParams;
+    fields: TFieldGroup;
     children: React.ReactNode | React.ReactChildren;
   }) => {
     const formStore = useMemo(() => new FormStore(fields), []);

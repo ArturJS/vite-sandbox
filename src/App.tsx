@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { observer } from 'mobx-react-lite';
-import { Form, Field, TFieldParams } from './Form';
+import { Form, Field, TFieldGroup } from './Form';
 import logo from './logo.svg';
 import './App.scss';
 
@@ -40,7 +40,7 @@ const App = observer(() => {
             ]
           }
         }
-      } as TFieldParams),
+      } as TFieldGroup),
     []
   );
 
