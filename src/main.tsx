@@ -1,9 +1,7 @@
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
-// import App from './app';
+import App from './App';
 import './index.scss';
-
-const App = React.lazy(() => import('./app'));
 
 ReactDOM.render(
   <React.StrictMode>

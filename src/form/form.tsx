@@ -1,49 +1,8 @@
-import React, { useContext, useEffect, createContext, useMemo } from 'react';
+import React, { createContext, useMemo } from 'react';
 import { observer } from 'mobx-react-lite';
+import { FormStore, TFieldParams } from './store';
 
-import { FormStore, TFieldParams } from './form-store';
-
-// @ts-ignore
-export const FormContext = createContext<FormStore>({});
-
-export const Field = observer(({ name }: any) => {
-  const formStore = useContext<FormStore>(FormContext);
-  const field = formStore.getField(name);
-
-  if (field instanceof FormStore) {
-    throw new TypeError(`Field with ${name} is instance of FormStore and cannot be accepted`);
-  }
-
-  const { value, onChange, onBlur, error } = field;
-
-  useEffect(() => {}, []);
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // @ts-ignore
-    onChange(event.target.value);
-  };
-  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    // @ts-ignore
-    onBlur(event.target.value);
-  };
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <input
-        type="text"
-        name={name}
-        value={value as string}
-        onChange={handleChange}
-        onBlur={handleBlur}
-      />
-      {error ? (
-        <span style={{ color: 'orangered' }}>{error}</span>
-      ) : (
-        <span>&nbsp;</span>
-      )}
-    </div>
-  );
-});
+export const FormContext = createContext<FormStore | null>(null);
 
 export const Form = observer(
   ({
