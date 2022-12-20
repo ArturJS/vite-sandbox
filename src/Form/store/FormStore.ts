@@ -2,16 +2,16 @@ import { computed, makeObservable, observable, action } from 'mobx';
 import type { FieldValue, TValues, TFieldBase, Externals } from './types';
 import { FieldStore } from './FieldStore';
 
-type TField<TValue = FieldValue> = Omit<
+type TField<TValue extends FieldValue = FieldValue> = Omit<
   TFieldBase<TValue>,
   'isDirty' | 'onChange' | 'onBlur'
 >;
 
-export type TFieldGroup<TValue = FieldValue> = {
+export type TFieldGroup<TValue extends FieldValue = FieldValue> = {
   [key in string]: TField<TValue> | TFieldGroup<TValue>;
 };
 
-function checkIsNestedField(
+function isNestedField(
   field: TField | TFieldGroup
 ): field is TFieldGroup {
   return !('value' in field);
@@ -33,7 +33,7 @@ export class FormStore {
 
   @observable public externals: Externals = {};
 
-  @observable private _fields: Record<string, FieldStore<unknown>> = {};
+  @observable private _fields: Record<string, FieldStore<FieldValue>> = {};
 
   @action public setSubmitted(isSubmitted = true) {
     this.isSubmitted = isSubmitted;
@@ -74,7 +74,7 @@ export class FormStore {
     for (let [name, field] of Object.entries(fields)) {
       const fieldName = parentName ? `${parentName}.${name}` : name;
 
-      if (checkIsNestedField(field)) {
+      if (isNestedField(field)) {
         this.initFields(field, fieldName);
         return;
       }

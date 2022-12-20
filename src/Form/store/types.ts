@@ -1,26 +1,25 @@
-export type FieldValue = string | number | boolean | unknown;
+export type FieldValue = string | number | boolean;
 
-export interface TValues<TValue = FieldValue>
-  extends Record<string, TValue | TValues<TValue>> {
+export type TValues<TValue = FieldValue> = {
   [key: string]: TValue | TValues<TValue>;
 }
 
-export interface ValidationResult<T extends FieldValue> {
+export type ValidationResult<TValue extends FieldValue> = {
   error?: string;
-  closestValidValue?: T;
+  closestValidValue?: TValue;
 }
 
-export type Validator<T extends FieldValue> = (
-  value: T,
+export type Validator<TValue extends FieldValue> = (
+  value: TValue,
   options?: {
     values?: TValues;
     externals?: Externals;
   }
-) => ValidationResult<T> | undefined;
+) => ValidationResult<TValue> | undefined;
 
-export type FieldParam<T extends FieldValue> = {
-  value: T | Record<string, FieldParam<T>>;
-  validators: Validator<T>[];
+export type FieldParam<TValue extends FieldValue> = {
+  value: TValue | Record<string, FieldParam<TValue>>;
+  validators: Validator<TValue>[];
 };
 
 export type TFieldBase<TValue extends FieldValue> = {
@@ -36,21 +35,17 @@ export type TField =
   | TFieldBase<number>
   | TFieldBase<boolean>;
 
-export interface Parser<T> {
-  (value: T): T;
-}
+export type Parser<TValue> = (value: TValue) => TValue;
 
-export interface Formatter<T> {
-  (value: T): T;
-}
+export type Formatter<TValue> = (value: TValue) => TValue;
 
 export type Externals = Record<string, unknown> | undefined;
 
-export interface FieldParams<T extends FieldValue> {
-  value: T;
-  validators: Validator<T>[];
+export type FieldParams<TValue extends FieldValue> = {
+  value: TValue;
+  validators: Validator<TValue>[];
   getValues: () => TValues;
-  parsers?: Parser<T>[];
-  formatters?: Formatter<T>[];
+  parsers?: Parser<TValue>[];
+  formatters?: Formatter<TValue>[];
   externals?: Externals;
 }

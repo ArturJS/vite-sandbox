@@ -9,7 +9,7 @@ import type {
   Externals
 } from './types';
 
-const createValueParser = <T>(initialValue: T) => {
+const createValueParser = <TValue>(initialValue: TValue) => {
   const valueType = typeof initialValue;
   switch (valueType) {
     case 'string':
@@ -35,14 +35,14 @@ const createValueParser = <T>(initialValue: T) => {
   }
 };
 
-export class FieldStore<T extends FieldValue> {
-  @observable public value: T;
+export class FieldStore<TValue extends FieldValue> {
+  @observable public value: TValue;
   @observable public isDirty: boolean;
   @observable public error: string | null = null;
-  @observable public closestValidValue: T | null = null;
-  public validators: Validator<T>[];
-  public parsers: Parser<T>[];
-  public formatters: Formatter<T>[];
+  @observable public closestValidValue: TValue | null = null;
+  public validators: Validator<TValue>[];
+  public parsers: Parser<TValue>[];
+  public formatters: Formatter<TValue>[];
   private getValues: () => TValues;
   private externals: Externals;
 
@@ -53,14 +53,14 @@ export class FieldStore<T extends FieldValue> {
     formatters,
     getValues,
     externals
-  }: FieldParams<T>) {
+  }: FieldParams<TValue>) {
     this.value = value;
     this.validators = validators;
     this.getValues = getValues;
     this.externals = externals;
     this.isDirty = false;
 
-    const defaultParser = createValueParser<T>(value) as unknown as Parser<T>;
+    const defaultParser = createValueParser<TValue>(value) as unknown as Parser<TValue>;
 
     this.parsers = parsers ?? [defaultParser];
     this.formatters = formatters ?? [];
@@ -74,12 +74,12 @@ export class FieldStore<T extends FieldValue> {
   }
 
   @action.bound
-  onChange(rawValue: T) {
+  onChange(rawValue: TValue) {
     this.parseAndValidate(rawValue);
   }
 
   @action.bound
-  public onBlur(rawValue: T) {
+  public onBlur(rawValue: TValue) {
     this.setDirty();
     this.parseAndValidate(rawValue);
   }
@@ -104,7 +104,7 @@ export class FieldStore<T extends FieldValue> {
   }
 
   @action.bound
-  private parseAndValidate(rawValue: T) {
+  private parseAndValidate(rawValue: TValue) {
     this.value = this.parsers.reduceRight((valueToParse, parser) => {
       return parser(valueToParse);
     }, rawValue);
